@@ -1,0 +1,19 @@
+content_safety:
+  severity_threshold: 2
+  safe_responce: "I cannot generate a response to this request."
+
+system_instructions:
+  max_tokens: 4000
+
+llm:
+  max_past_messages: 10
+  max_tokens: 150
+  temperature: 0.5
+  top_p: 0.5
+
+redis: 
+  session_ttl_seconds: 3600
+  max_messages_in_history: 20
+
+cosmos:
+  profile_ttl_seconds: 86400

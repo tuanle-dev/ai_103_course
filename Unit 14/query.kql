@@ -1,0 +1,18 @@
+dependencies
+| where customDimensions.["conversation.id"] == "016b9cf5-e4ae-4f5f-8cc9-de3561362e37"
+| extend 
+    span_name = name,
+    start_time = timestamp,
+    end_time = timestamp + totimespan(duration / 1000),
+    span_id = id
+| project 
+    span_name,
+    start_time,
+    end_time,
+    duration_ms = duration,
+    span_id,
+    success
+| order by start_time asc
+| extend 
+    conversation_start = case(span_name == "model_routing", start_time, prev(start_time, 1)),
+    conversation_end = case(span_name == "model_routing", end_time, next(end_time, 1))

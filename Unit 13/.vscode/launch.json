@@ -1,0 +1,21 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: AI-103 Walkthrough",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/ai_103_python_unit_13.py",
+            "console": "integratedTerminal",
+            "python": "tutorials/Scripts/python.exe",
+            "env": {
+                "AZURE_OPENAI_ENDPOINT": "https://unit13course.services.ai.azure.com/openai/v1",
+                "LLM_MODEL_DEPLOYMENT_NAME": "unit13course-llm-deploy",
+                "USER_NAME": "Luke Ginn",
+            }
+        },
+    ]
+}

@@ -1,0 +1,8 @@
+llm:
+  max_past_messages: 10
+  max_tokens: 50
+  temperature: 0.5
+  top_p: 0.5
+
+concurrent:
+  timeout_seconds: 120

@@ -1,0 +1,26 @@
+content_safety:
+  severity_threshold: 1
+  safe_responce: "I cannot generate a response to this request."
+
+ai_search:
+  top_k: 1
+
+system_instructions:
+  max_tokens: 4000
+
+intent_classifier:
+  max_tokens: 2
+  temperature: 0
+  top_p: 0.0
+
+llm:
+  max_past_messages: 10
+  max_tokens: 150
+  temperature: 0.5
+  top_p: 0.5
+
+slm:
+  max_past_messages: 5
+  max_tokens: 100
+  temperature: 0.25
+  top_p: 0.25
