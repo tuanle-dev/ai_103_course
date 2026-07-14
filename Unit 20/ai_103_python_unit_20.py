@@ -1,17 +1,17 @@
-﻿"""
-UNIT 20: Complete Agent Integration – Production-Ready System
+"""
+UNIT 20: Tích hợp Agent hoàn chỉnh – Hệ thống sẵn sàng triển khai
 
-WHAT'S NEW IN THIS UNIT:
-1. Azure Key Vault — Securely store and manage secrets, keys, and certificates; integrated with managed identities to avoid hardcoded credentials.
-2. Content Safety — Integrated content safety checks before processing user inputs and responses.
-3. Azure AI Clients & Multimodel Capability — Integrates Vision, Speech, Document Intelligence, Text Analytics, and Azure OpenAI clients; supports selecting and using multiple model endpoints for multimodal workflows.
-4. NLP Preprocessing — Standardized preprocessing pipeline for text (tokenization, normalization, stopword handling).
-5. Cosmos DB Long-Term Memory — Loads and saves user profiles via `CosmosMemory` and is injected before agent invocation for context-aware responses.
-6. SLM Memory Updates — Short-lived model (SLM) flow to update long-term memory after agent responses.
-7. Redis Local Cache Mode — Redis integration implemented with a local-cache fallback (no external Redis connection required).
-8. Conversational Loop — Continuous conversation loop enabling multi-turn agent interactions.
-9. Manager & Support Agents — Manager agent plus support agent for orchestration and external integrations.
-10. MCP Servers — Agents can call MCP servers as tools; MCP server URLs and API keys are configurable via environment variables and `config.yaml`, enabling external tool integrations and remote task execution.
+ĐIỂM MỚI TRONG UNIT NÀY:
+1. Azure Key Vault — Lưu trữ an toàn secret, key và certificate; dùng Managed Identity để tránh ghi cứng thông tin xác thực.
+2. Content Safety — Kiểm tra độ an toàn của nội dung đầu vào và đầu ra.
+3. Azure AI đa phương thức — Tích hợp Vision, Speech, Document Intelligence, Text Analytics và Azure OpenAI; hỗ trợ nhiều model endpoint.
+4. Tiền xử lý NLP — Chuẩn hóa văn bản qua tách từ, chuẩn hóa và xử lý stopword.
+5. Bộ nhớ dài hạn Cosmos DB — Tải và lưu hồ sơ người dùng để agent trả lời theo ngữ cảnh.
+6. Cập nhật bộ nhớ bằng SLM — Dùng model nhỏ để cập nhật bộ nhớ dài hạn sau mỗi cuộc hội thoại.
+7. Redis ở chế độ cache cục bộ — Có cơ chế dự phòng khi không kết nối Redis bên ngoài.
+8. Vòng lặp hội thoại — Hỗ trợ tương tác nhiều lượt liên tục.
+9. Manager Agent và agent hỗ trợ — Điều phối tác vụ và tích hợp dịch vụ bên ngoài.
+10. MCP Server — Cho phép agent gọi công cụ bên ngoài qua URL và API key cấu hình trong biến môi trường hoặc `config.yaml`.
 """
 
 import os
@@ -41,7 +41,7 @@ from classes.manager_agent import ManagerAgent
 from classes.user_preferences_agent import UserPreferencesAgent
 
 # =============================================================================
-# CONFIGURATION
+# CẤU HÌNH
 # =============================================================================
 
 key_vault_url = os.getenv("KEY_VAULT_URL")
@@ -55,13 +55,14 @@ with open("config.yaml", "r") as file:
     config = yaml.safe_load(file)
 
 # =============================================================================
-# AUTHENTICATION
+# XÁC THỰC VÀ KHỞI TẠO CLIENT
 # =============================================================================
 
 credential = DefaultAzureCredential()
 secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
 secret_manager = SecretManager(secret_client)
 
+# Tạo các client Azure bằng thông tin lấy từ Key Vault.
 token_provider = get_bearer_token_provider(credential, "https://ai.azure.com/.default")
 openai_client = OpenAI(
     base_url=secret_manager.get_secret("AZURE-OPENAI-ENDPOINT"), api_key=token_provider
@@ -100,23 +101,23 @@ if container_client.read():
     print("Successfully connected to Cosmos DB container")
 
 # =============================================================================
-# INSTANTIATE CLASSES
+# KHỞI TẠO CÁC THÀNH PHẦN
 # =============================================================================
 
-# Instantiate ContentSafety class
+# Kiểm tra an toàn nội dung.
 content_safety = ContentSafety(content_safety_client, config)
 
-# Instantiate AzureAIService class
+# Xử lý dữ liệu đa phương thức từ các dịch vụ Azure AI.
 azure_ai_service = AzureAIService(
     vision_client=vision_client,
     speech_config=speech_config_client,
     doc_intel_client=doc_intel_client,
 )
 
-# Instantiate AzureNLPService class
+# Tiền xử lý và phân tích văn bản.
 azure_nlp_service = AzureNLPService(language_client=language_client, config=config)
 
-# Instantiate CosmosMemory class
+# Lưu và đọc bộ nhớ dài hạn từ Cosmos DB.
 cosmos_memory = CosmosMemory(
     cosmos_client=cosmos_db_client,
     database_client=database_client,
@@ -124,10 +125,10 @@ cosmos_memory = CosmosMemory(
     config=config,
 )
 
-# Instantiate RedisMemory class
-redis_memory = RedisMemory(redis_client=None, config=config)  # No Redis in this unit
+# Dùng cache cục bộ vì unit này không kết nối Redis thật.
+redis_memory = RedisMemory(redis_client=None, config=config)
 
-# Instantiate RefundAgent class
+# Xử lý yêu cầu hoàn tiền.
 refund_agent = RefundAgent(
     openai_client=openai_client,
     model_deployment_name=secret_manager.get_secret("LLM-MODEL-DEPLOYMENT-NAME"),
@@ -137,7 +138,7 @@ refund_agent = RefundAgent(
     config=config,
 )
 
-# Instantiate ProductAgent class
+# Xử lý yêu cầu liên quan đến sản phẩm và MCP Server.
 product_agent = ProductAgent(
     openai_client=openai_client,
     model_deployment_name=secret_manager.get_secret("LLM-MODEL-DEPLOYMENT-NAME"),
@@ -149,7 +150,7 @@ product_agent = ProductAgent(
     config=config,
 )
 
-# Instantiate ManagerAgent class
+# Điều phối yêu cầu đến agent phù hợp.
 manager_agent = ManagerAgent(
     openai_client=openai_client,
     model_deployment_name=secret_manager.get_secret("LLM-MODEL-DEPLOYMENT-NAME"),
@@ -160,7 +161,7 @@ manager_agent = ManagerAgent(
     config=config,
 )
 
-# Instantiate UserPreferencesAgent class
+# Trích xuất và cập nhật sở thích người dùng.
 user_preferences_agent = UserPreferencesAgent(
     openai_client=openai_client,
     model_deployment_name=secret_manager.get_secret("SLM-MODEL-DEPLOYMENT-NAME"),
@@ -169,10 +170,11 @@ user_preferences_agent = UserPreferencesAgent(
 )
 
 # =============================================================================
-# MAIN SCRIPT LOGIC
+# LUỒNG XỬ LÝ CHÍNH
 # =============================================================================
 
-session_id = "session_12346"  # In a real application, this would be dynamically generated per user session
+# Thực tế nên tạo ID riêng cho mỗi phiên người dùng.
+session_id = "session_12346"
 
 
 def interactive_loop():
@@ -191,14 +193,14 @@ def interactive_loop():
             print("Exiting interactive mode.")
             break
 
-        # Input filtering
+        # Kiểm tra an toàn đầu vào.
         print("\n[INPUT FILTER] Scanning user message...")
         if not content_safety.is_text_safe(user_message_text):
             print("User message blocked by Content Safety.")
             continue
         print("User message passed safety check.")
 
-        # For the first message include a fixed multimodal artifact (image); skip later messages
+        # Chỉ gửi ảnh mẫu ở tin nhắn đầu tiên.
         if message_count == 0:
             print(
                 "\n[AZURE NLP SERVICE] Preprocessing user input with Azure AI Language (multimodal)..."
@@ -214,7 +216,7 @@ def interactive_loop():
             user_message_text
         )
 
-        # Replace original user message with redacted and tagged version for the agent to process
+        # Dùng bản đã che dữ liệu nhạy cảm và gắn nhãn cho agent.
         user_message_for_agent = azure_nlp_service_response.get(
             "tagged", user_message_text
         )
@@ -222,12 +224,12 @@ def interactive_loop():
             f"Preprocessed user message (with sensitive info redacted and entities tagged): {user_message_for_agent}"
         )
 
-        # Get user preferences from Cosmos DB
+        # Lấy sở thích người dùng từ bộ nhớ dài hạn.
         print("\n[LONG-TERM MEMORY] Retrieving user preferences from Cosmos DB...")
         user_preferences = cosmos_memory.get_user_or_default_profile(user_id=user_name)
         print(f"\nUser preferences: {user_preferences}")
 
-        # Process with ManagerAgent
+        # Manager Agent điều phối và xử lý yêu cầu.
         print("\n[MANAGER AGENT] Processing message with agent...")
         reply = manager_agent.process_message(
             user_message=user_message_for_agent,
@@ -237,12 +239,12 @@ def interactive_loop():
             session_id=session_id,
         )
 
-        # Check if we got a valid response
+        # Bỏ qua lượt hiện tại nếu model không trả về kết quả.
         if reply is None:
             print("ERROR: Failed to get response from model.")
             continue
 
-        # Output filtering
+        # Kiểm tra an toàn đầu ra.
         print("\n[OUTPUT FILTER] Scanning assistant response...")
         if not content_safety.is_text_safe(reply):
             print("Assistant response blocked by Content Safety.")
@@ -262,7 +264,7 @@ def interactive_loop():
 
         message_count += 1
 
-    # Update user preferences via UserPreferencesAgent and save to Cosmos
+    # Trích xuất sở thích mới từ lịch sử hội thoại.
     print(
         "\n[USER PREFERENCES AGENT] Processing conversation history to extract user preferences..."
     )
@@ -272,6 +274,7 @@ def interactive_loop():
     )
     print(f"\nUser Preferences Agent reply: {user_preferences_reply}")
 
+    # Lưu sở thích đã cập nhật vào Cosmos DB.
     print("\n[LONG-TERM MEMORY] Saving updated user preferences to Cosmos DB...")
     cosmos_memory.save_user_profile(
         user_id=user_name, preferences=user_preferences_reply
@@ -283,18 +286,18 @@ if __name__ == "__main__":
     interactive_loop()
 
 # =============================================================================
-# UNIT 20 SUMMARY
+# TỔNG KẾT UNIT 20
 # =============================================================================
-# This unit demonstrates building a production-ready, secure, multimodal agent system with
-# long-term memory, safety checks, caching strategies, and external tool integrations.
+# Unit này xây dựng hệ thống agent an toàn, đa phương thức và sẵn sàng triển khai.
+# Hệ thống có bộ nhớ dài hạn, kiểm tra nội dung, cache và công cụ bên ngoài.
 
-# 1. Azure Key Vault — Securely store and manage secrets, keys, and certificates; integrated with managed identities to avoid hardcoded credentials.
-# 2. Content Safety — Integrated content safety checks before processing user inputs and responses.
-# 3. Azure AI Clients & Multimodel Capability — Integrates Vision, Speech, Document Intelligence, Text Analytics, and Azure OpenAI clients; supports selecting and using multiple model endpoints for multimodal workflows.
-# 4. NLP Preprocessing — Standardized preprocessing pipeline for text (tokenization, normalization, stopword handling).
-# 5. Cosmos DB Long-Term Memory — Loads and saves user profiles via `CosmosMemory` and is injected before agent invocation for context-aware responses.
-# 6. SLM Memory Updates — Short-lived model (SLM) flow to update long-term memory after agent responses.
-# 7. Redis Local Cache Mode — Redis integration implemented with a local-cache fallback (no external Redis connection required).
-# 8. Conversational Loop — Continuous conversation loop enabling multi-turn agent interactions.
-# 9. Manager & Support Agents — Manager agent plus support agent for orchestration and external integrations.
-# 10. MCP Servers — Agents can call MCP servers as tools; MCP server URLs and API keys are configurable via environment variables and `config.yaml`, enabling external tool integrations and remote task execution.
+# 1. Azure Key Vault — Quản lý secret an toàn bằng Managed Identity.
+# 2. Content Safety — Kiểm tra nội dung đầu vào và đầu ra.
+# 3. Azure AI đa phương thức — Kết hợp Vision, Speech, Document Intelligence, Text Analytics và Azure OpenAI.
+# 4. Tiền xử lý NLP — Chuẩn hóa văn bản trước khi gửi cho agent.
+# 5. Cosmos DB — Lưu hồ sơ và sở thích người dùng dài hạn.
+# 6. SLM — Cập nhật bộ nhớ dài hạn sau cuộc hội thoại.
+# 7. Redis — Dùng cache cục bộ khi không có kết nối Redis.
+# 8. Vòng lặp hội thoại — Hỗ trợ tương tác nhiều lượt.
+# 9. Hệ thống agent — Manager Agent điều phối các agent chuyên trách.
+# 10. MCP Server — Kết nối agent với công cụ và dịch vụ bên ngoài.
