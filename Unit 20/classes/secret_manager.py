@@ -44,6 +44,10 @@ class SecretManager:
         này. Vì vậy, các lần gọi tiếp theo với cùng `secret_name` thường sẽ
         không cần thực thi lại nội dung phương thức.
 
+        Trong đoạn code hiện tại, hai cache gần như trùng chức năng. Sau lần gọi đầu tiên, cả hai đều chứa cùng một giá trị. 
+        Trong điều kiện sử dụng bình thường, _cache hầu như không mang lại lợi ích vì lru_cache đã trả kết quả trước khi _cache được kiểm tra.
+        _cache phát huy tác dụng trong một số tình huống, chẳng hạn một mục đã bị lru_cache loại bỏ do vượt quá 128 mục nhưng vẫn còn trong _cache.
+
         secret_name: Tên của secret cần lấy trong Azure Key Vault.
 
         Return: giá trị của secret dưới dạng chuỗi.
